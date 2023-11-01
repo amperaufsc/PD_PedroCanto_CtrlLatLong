@@ -9,28 +9,34 @@
 
 import numpy as np
 
-def get_Vxref(Vcar, Psi):
-    return np.linalg.norm(Vcar)*np.cos(Psi)
+def get_Vxref(Track,xcar,ycar, Psi):
+    Trackindex = get_Posref(Track,xcar,ycar)[3]
+    return np.linalg.norm(Track[Trackindex,3])*np.cos(Psi)
+
+def get_Posref(Track,xcar,ycar):
+
 
 def get_dtPsiref(Track,xcar,ycar):
+    # dt, discretização do tempo
+    dt = 0.01
 
-def get_Vx(Vcar,delta)
-    return np.linalg.norm(Vcar)*np.cos(delta)
+    xref, yref, Trackindex = get_Posref(Track,xcar,ycar)
+    return (Track[Trackindex,:2]-Track[Trackindex-1,:2])/dt
 
-def get_slipRatio(Vcar,w,delta):
+def get_slipRatio(Vcar,wRoda,delta):
     # raio da roda do carro
     R=1
 
-    Vx = get_Vx(Vcar,delta)
-    return (w*R-Vx)/Vx
+    Vx = Vcar[0]
+    return (wRoda*R-Vx)/Vx
 
-def ctrlLongitudinal(Vcar, delta, Psi, w, dtPsiref, dtPsi, roda):
+def ctrlLongitudinal(Vcar, delta, Psi, wRoda, dtPsiref, dtPsi, roda):
     # ganhos rodas frontais, rodas traseiras, velocidade em X, velocidade angular
     Kkf, Kkr, Kvx, KdtPsi = 250.0, 350.0, 0.1, 0.03 
 
-    Ki = get_slipRatio(Vcar,w,delta)
+    Ki = get_slipRatio(Vcar,wRoda,delta)
     Vxref = get_Vxref(Vcar, Psi)
-    Vx = get_Vx(Vcar,delta)
+    Vx = Vcar[0]
     Kref = Kvx*(Vxref-Vx)
     Kdiff = KdtPsi*(dtPsiref-dtPsi)
 
@@ -40,9 +46,6 @@ def ctrlLongitudinal(Vcar, delta, Psi, w, dtPsiref, dtPsi, roda):
         Kk=Kkr
 
     return Kk*(Kref-Ki-(-1)**(roda)*Kdiff)
-
-def get_Posref(Track,xcar,ycar):
-
 
 def get_ePsi(tang, Vcar):
     return np.arcsin(np.cross(tang,Vcar)[2]/(np.linalg.norm(tang)*np.linalg.norm(Vcar)))
